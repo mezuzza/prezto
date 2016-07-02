@@ -11,3 +11,13 @@ if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
 fi
 
 # Customize to your needs...
+alias ls='ls --color=auto -h --group-directories-first'
+alias sml='rlwrap sml'
+alias ocaml='rlwrap ocaml'
+alias ocamldebug='ocamldebug \`ocamlfind query -recursive -i-format batteries\` -I _build'
+alias term='urxvt -cd `pwd` &'
+alias grep='egrep --color=auto'
+
+bindkey "^r" history-incremental-search-backward
+bindkey "^s" history-incremental-search-forward
+. /home/prasanth/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true
