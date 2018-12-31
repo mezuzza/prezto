@@ -50,6 +50,7 @@ typeset -gU cdpath fpath mailpath path
 # Set the list of directories that Zsh searches for programs.
 path=(
   /usr/local/{,s}bin(N)
+  $HOME/.local/bin
   $path
 )
 
@@ -61,7 +62,7 @@ path=(
 # Mouse-wheel scrolling has been disabled by -X (disable screen clearing).
 # Remove -X to enable it.
 if [[ -z "$LESS" ]]; then
-  export LESS='-g -i -M -R -S -w -X -z-4'
+  export LESS='-g -i -M -R -S -w -z-4'
 fi
 
 # Set the Less input preprocessor.
