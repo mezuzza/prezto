@@ -47,6 +47,17 @@ typeset -gU cdpath fpath mailpath path
 #   $cdpath
 # )
 
+if (( $+commands[brew] )); then
+  # Set homebrew paths
+  eval $(/opt/homebrew/bin/brew shellenv)
+  path=(
+    $HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin
+    $path
+  )
+  fpath=($HOMEBREW_PREFIX/share/zsh/site-functions $fpath)
+fi
+
+
 # Set the list of directories that Zsh searches for programs.
 path=(
   /usr/local/{,s}bin(N)
