@@ -16,6 +16,3 @@ alias grep='egrep --color=auto'
 
 bindkey "^r" history-incremental-search-backward
 bindkey "^s" history-incremental-search-forward
-
-# Fuck this actually though. Who even thinks this is safe?
-eval "$(rbenv init - zsh)"
