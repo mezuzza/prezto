@@ -5,10 +5,14 @@
 #   Sorin Ionescu <sorin.ionescu@gmail.com>
 #
 
+autoload bashcompinit && bashcompinit
+
 # Source Prezto.
 if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
 fi
+
+complete -C $(which aws_completer) aws
 
 # Customize to your needs...
 alias ls='ls --color=auto -h --group-directories-first'
@@ -16,3 +20,6 @@ alias grep='egrep --color=auto'
 
 bindkey "^r" history-incremental-search-backward
 bindkey "^s" history-incremental-search-forward
+export GPG_TTY=$(tty)
+
+
