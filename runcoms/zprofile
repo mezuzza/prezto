@@ -61,9 +61,12 @@ fi
 # Set the list of directories that Zsh searches for programs.
 path=(
   /usr/local/{,s}bin(N)
-  $HOME/.yarn/bin
   $HOME/.local/bin
-  $HOME/go/bin
+  $HOME/.bun/bin
+  $HOME/.krew/bin
+  /opt/homebrew/opt/gnu-getopt/bin
+  /opt/homebrew/opt/coreutils/libexec/gnubin
+  /opt/homebrew/bin
   $path
 )
 
