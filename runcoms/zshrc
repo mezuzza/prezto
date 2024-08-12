@@ -20,6 +20,5 @@ alias grep='egrep --color=auto'
 
 bindkey "^r" history-incremental-search-backward
 bindkey "^s" history-incremental-search-forward
+
 export GPG_TTY=$(tty)
-
-
