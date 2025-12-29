@@ -39,40 +39,34 @@ fi
 # Paths
 #
 
-# Ensure path arrays do not contain duplicates.
-typeset -gU cdpath fpath mailpath path
-
-# Set the list of directories that cd searches.
-# cdpath=(
-#   $cdpath
-# )
-
-if (( $+commands[brew] )); then
-  # Set homebrew paths
+if [[ -x /opt/homebrew/bin/brew ]]; then
   eval $(/opt/homebrew/bin/brew shellenv)
-  path=(
-    $HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin
-    $path
-  )
-  fpath=($HOMEBREW_PREFIX/share/zsh/site-functions $fpath)
+elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+  eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
 fi
-
 
 # Set the list of directories that Zsh searches for programs.
 path=(
-  /usr/local/{,s}bin(N)
-  $HOME/.local/bin
-  $HOME/go/bin
-  $HOME/.bun/bin
-  $HOME/.cargo/bin
-  $HOME/.ghcup/bin
-  $HOME/.krew/bin
-  $HOME/.yarn/bin
-  /opt/homebrew/opt/gnu-getopt/bin
-  /opt/homebrew/opt/coreutils/libexec/gnubin
-  /opt/homebrew/bin
+  $HOME/.local/bin(N-/)
+  $HOME/go/bin(N-/)
+  $HOME/.bun/bin(N-/)
+  $HOME/.cargo/bin(N-/)
+  $HOME/.ghcup/bin(N-/)
+  $HOME/.krew/bin(N-/)
+  $HOME/.yarn/bin(N-/)
+
+  $HOME/.antigravity/antigravity/bin(N-/)
+
+  $HOMEBREW_PREFIX/opt/gnu-getopt/bin(N-/)
+  $HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin(N-/)
+
+  /usr/local/{,s}bin(N-/)
+
   $path
 )
+
+# Ensure path arrays do not contain duplicates.
+typeset -gU cdpath fpath mailpath path
 
 #
 # Less
