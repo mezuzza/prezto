@@ -39,11 +39,19 @@ fi
 # Paths
 #
 
-if [[ -x /opt/homebrew/bin/brew ]]; then
-  eval $(/opt/homebrew/bin/brew shellenv)
-elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
-  eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
-fi
+homebrew_locs=(
+    /opt/homebrew/bin/brew
+    /home/linuxbrew/.linuxbrew/bin/brew
+)
+
+for brewpath in "$homebrew_locs[@]"; do
+    if [[ ! -x $brewpath ]]; then
+        continue
+    fi
+
+    eval $($brewpath shellenv)
+    break;
+done
 
 # Set the list of directories that Zsh searches for programs.
 path=(
