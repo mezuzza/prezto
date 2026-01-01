@@ -59,6 +59,7 @@ path=(
 
   $HOMEBREW_PREFIX/opt/gnu-getopt/bin(N-/)
   $HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin(N-/)
+  $(brew --prefix rustup)/bin
 
   /usr/local/{,s}bin(N-/)
 
