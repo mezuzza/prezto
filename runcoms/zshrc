@@ -13,8 +13,20 @@ if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
 fi
 
 complete -C $(which aws_completer) aws
-compdef _gcloud gcloud
-(( ! $+functions[_gcloud] )) && autoload -Uz _gcloud
+
+gcloud_completions_loc=(
+    /opt/homebrew
+    /usr
+)
+
+for loc in $gcloud_completions_loc; do
+  completion_path="$loc/share/google-cloud-sdk/completion.zsh.inc"
+  if [[ ! -f "$completion_path" ]]; then
+    continue
+  fi
+
+  source "$completion_path"
+done
 
 # Customize to your needs...
 alias ls='ls --color=auto -h --group-directories-first'
