@@ -50,6 +50,11 @@ for brewpath in "$homebrew_locs[@]"; do
     fi
 
     eval $($brewpath shellenv)
+
+	# Forcibly set zsh site-functions. Don't know why, but fpath doesn't seem to
+	# get populated without this.
+	fpath[1,0]="$HOMEBREW_PREFIX/share/zsh/site-functions"
+
     break;
 done
 
@@ -67,7 +72,7 @@ path=(
 
   $HOMEBREW_PREFIX/opt/gnu-getopt/bin(N-/)
   $HOMEBREW_PREFIX/opt/coreutils/libexec/gnubin(N-/)
-  $(brew --prefix rustup)/bin
+  $HOMEBREW_PREFIX/opt/rustup/bin
 
   /usr/local/{,s}bin(N-/)
 
