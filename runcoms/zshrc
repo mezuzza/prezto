@@ -37,3 +37,4 @@ bindkey "^s" history-incremental-search-forward
 
 export GPG_TTY=$(tty)
 source <(fzf --zsh)
+eval "$(starship init zsh)"
