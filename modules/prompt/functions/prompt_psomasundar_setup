@@ -1,56 +1,155 @@
-function prompt_wikimatze_precmd {
-  git-info
+function prompt_psomasundar_preexec {
+  _prompt_psomasundar_command_start=$EPOCHREALTIME
 }
 
-function prompt_wikimatze_setup {
+function prompt_psomasundar_directory {
+  local root=$1
+  local path
+
+  if [[ -n $root && $PWD == ${root}(|/*) ]]; then
+    path=${root:t}${PWD#$root}
+  else
+    path=${(%):-%3~}
+  fi
+
+  _prompt_psomasundar_directory=${path//\%/%%}
+}
+
+function prompt_psomasundar_jj_info {
+  local output name state
+
+  output=$(jj log -r @ --no-graph -T '
+    coalesce(bookmarks.map(|b| b.name()).join(", "), working_copies.map(|w| w.name()).join(", "), change_id.short()) ++
+    "\t" ++ if(empty, "clean", "dirty")
+  ' 2>/dev/null) || return
+
+  name=${output%%$'\t'*}
+  state=${output##*$'\t'}
+  name=${name//\%/%%}
+
+  if [[ $state == clean ]]; then
+    _prompt_psomasundar_vcs=" %F{green}%f $name %F{green}[%f%F{green}✓%f%F{green}]%f"
+  else
+    _prompt_psomasundar_vcs=" %F{green}%f $name %F{green}[%f%F{red}✗%f%F{green}]%f"
+  fi
+}
+
+function prompt_psomasundar_cloud_info {
+  local gcloud_config=${CLOUDSDK_CONFIG:-$HOME/.config/gcloud}/active_config
+  local active_config context
+  local kubeconfig=${KUBECONFIG:-$HOME/.kube/config}
+  local config mtime
+  local signature=$kubeconfig
+  local -a kubeconfigs
+
+  _prompt_psomasundar_gcloud=
+  if [[ -r $gcloud_config ]]; then
+    active_config=$(<$gcloud_config)
+    if [[ -n $active_config && $active_config != default ]]; then
+      active_config=${active_config//\%/%%}
+      _prompt_psomasundar_gcloud="%B%F{cyan}☁ $active_config%f%b"
+    fi
+  fi
+
+  kubeconfigs=(${(s.:.)kubeconfig})
+  for config in $kubeconfigs; do
+    if [[ -e $config ]]; then
+      zstat -A mtime +mtime -- $config 2>/dev/null
+      signature+=";$config:$mtime[1]"
+    fi
+  done
+
+  if [[ $signature != $_prompt_psomasundar_kube_signature ]]; then
+    _prompt_psomasundar_kube_signature=$signature
+    context=$(kubectl config current-context 2>/dev/null)
+    if [[ $context == gke_*_*_* ]]; then
+      context=${context##*_}
+    fi
+    context=${context//\%/%%}
+    _prompt_psomasundar_kubernetes=${context:+"%B%F{cyan}☸ $context%f%b"}
+  fi
+}
+
+function prompt_psomasundar_duration {
+  local -F elapsed
+  local -i total hours minutes seconds
+
+  _prompt_psomasundar_duration=
+  [[ -n $_prompt_psomasundar_command_start ]] || return
+
+  elapsed=$(( EPOCHREALTIME - _prompt_psomasundar_command_start ))
+  _prompt_psomasundar_command_start=
+  (( elapsed >= 2 )) || return
+
+  total=$(( elapsed + 0.5 ))
+  hours=$(( total / 3600 ))
+  minutes=$(( total % 3600 / 60 ))
+  seconds=$(( total % 60 ))
+
+  (( hours > 0 )) && _prompt_psomasundar_duration+="${hours}h "
+  (( minutes > 0 )) && _prompt_psomasundar_duration+="${minutes}m "
+  _prompt_psomasundar_duration+="${seconds}s"
+  _prompt_psomasundar_duration="%B%F{yellow}${_prompt_psomasundar_duration}%f%b"
+}
+
+function prompt_psomasundar_precmd {
+  local repo_root
+
+  prompt_psomasundar_duration
+  _prompt_psomasundar_vcs=
+  unset git_info
+
+  if (( $+commands[jj] )) && repo_root=$(jj root 2>/dev/null); then
+    prompt_psomasundar_jj_info
+  else
+    if (( $+functions[git-info] )); then
+      git-info
+      if (( ${+git_info[prompt]} )); then
+        _prompt_psomasundar_vcs=${(e)git_info[prompt]}
+        repo_root=$(command git rev-parse --show-toplevel 2>/dev/null)
+      fi
+    fi
+  fi
+
+  prompt_psomasundar_directory $repo_root
+  prompt_psomasundar_cloud_info
+}
+
+function prompt_psomasundar_setup {
   setopt LOCAL_OPTIONS
   unsetopt XTRACE KSH_ARRAYS
   prompt_opts=(cr percent subst)
 
-  # Load required functions.
   autoload -Uz add-zsh-hook
+  zmodload zsh/datetime
+  zmodload zsh/stat
 
-  # Add hook for calling git-info before each command.
-  add-zsh-hook precmd prompt_wikimatze_precmd
+  add-zsh-hook preexec prompt_psomasundar_preexec
+  add-zsh-hook precmd prompt_psomasundar_precmd
 
-  # Use extended color pallete if available.
-  if [[ $TERM = *256color* || $TERM = *rxvt* ]]; then
-    _prompt_mseri_colors=(
-      "%F{81}"  # Turquoise
-      "%F{75}"  # Pastel Cyan
-      "%F{215}" # Light Orange
-      "%F{166}" # Orange - not used
-      "%F{119}" # Pastel Limegreen
-    )
-  else
-    _prompt_mseri_colors=(
-      "%F{cyan}"
-      "%F{magenta}"
-      "%F{yellow}"
-      "%F{red}"
-      "%F{green}"
-    )
-  fi
+  zstyle ':prezto:module:prompt' managed 'yes'
+  zstyle ':prezto:module:editor:info:keymap:primary' format '%B%F{green}»%f%b'
+  zstyle ':prezto:module:editor:info:keymap:primary:overwrite' format '%B%F{magenta}»%f%b'
+  zstyle ':prezto:module:editor:info:keymap:alternate' format '%B%F{yellow}«%f%b'
 
-  # Set git-info parameters.
   zstyle ':prezto:module:git:info' verbose 'yes'
-  zstyle ':prezto:module:git:info:ahead' format ' %%B%F{yellow}⬆%f%%b'
-  zstyle ':prezto:module:git:info:behind' format ' %%B%F{yellow}⬇%f%%b'
+  zstyle ':prezto:module:git:info:action' format ' %F{yellow}[%s]%f'
+  zstyle ':prezto:module:git:info:ahead' format ' %%B%F{yellow}⇡%A%f%%b'
+  zstyle ':prezto:module:git:info:behind' format ' %%B%F{yellow}⇣%B%f%%b'
   zstyle ':prezto:module:git:info:branch' format '%F{green}%b%f'
-  zstyle ':prezto:module:git:info:stashed' format ' %%B%F{cyan}✭%f%%b'
-
-  zstyle ':prezto:module:git:info:clean' format ' %F{green}✔%f'
+  zstyle ':prezto:module:git:info:commit' format '%F{yellow}%.7c%f'
+  zstyle ':prezto:module:git:info:position' format '%F{yellow}%p%f'
+  zstyle ':prezto:module:git:info:stashed' format ' %%B%F{blue}✭%f%%b'
+  zstyle ':prezto:module:git:info:clean' format ' %F{green}✓%f'
   zstyle ':prezto:module:git:info:dirty' format ' %F{red}✗%f'
-  zstyle ':prezto:module:git:info:untracked' format ' %%B%F{white}◼%f%%b'
-
+  zstyle ':prezto:module:git:info:unmerged' format ' %%B%F{red}═%f%%b'
+  zstyle ':prezto:module:git:info:untracked' format ' %%B%F{white}■%f%%b'
   zstyle ':prezto:module:git:info:keys' format \
-      'prompt' ' %F{green}(%f$(coalesce "%b" "%p" "%c")${git_info[rprompt]}%s%F{green})%f' \
-      'rprompt' '%A%B%S%C%D%U%u'
+    'prompt' ' %F{green}%f $(coalesce "%b" "%p" "%c")%s %F{green}[%f${${git_info[status]}# }%F{green}]%f' \
+    'status' '%A%B%S%C%D%U%u'
 
-  # Define prompts.
-  PROMPT="%(?.%F{green}✓.%F{red}✗ %?)%f ${_prompt_mseri_colors[2]}%~%f"'${(e)git_info[prompt]}'" » "
-  RPROMPT=""
-
+  PROMPT='%(?.%F{green}✓.%F{red}✗ %?)%f %F{75}${_prompt_psomasundar_directory}%f${_prompt_psomasundar_vcs} ${editor_info[keymap]} '
+  RPROMPT='${_prompt_psomasundar_gcloud:+${_prompt_psomasundar_gcloud} }${_prompt_psomasundar_kubernetes:+${_prompt_psomasundar_kubernetes} }${_prompt_psomasundar_duration}'
 }
 
-prompt_wikimatze_setup "$@"
+prompt_psomasundar_setup "$@"
