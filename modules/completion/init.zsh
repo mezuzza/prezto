@@ -50,22 +50,35 @@ LS_COLORS=${LS_COLORS:-'di=34:ln=35:so=32:pi=33:ex=31:bd=36;01:cd=33;01:su=31;40
 # Initialization
 #
 
-# Load and initialize the completion system ignoring insecure directories with a
-# cache time of 20 hours, so it should almost always regenerate the first time a
-# shell is opened each day.
+# Load and initialize the completion system, refreshing when the cache is old or
+# a completion directory has changed.
 autoload -Uz compinit
 _comp_path="${XDG_CACHE_HOME:-$HOME/.cache}/prezto/zcompdump"
+_comp_refresh=0
 # #q expands globs in conditional expressions
-if [[ $_comp_path(#qNmh-20) ]]; then
+if [[ ! $_comp_path(#qNmh-20) ]]; then
+  _comp_refresh=1
+else
+  for _comp_dir in $fpath; do
+    if [[ -d $_comp_dir && $_comp_dir -nt $_comp_path ]]; then
+      _comp_refresh=1
+      break
+    fi
+  done
+fi
+
+if (( ! _comp_refresh )); then
   # -C (skip function check) implies -i (skip security check).
   compinit -C -d "$_comp_path"
 else
   mkdir -p "$_comp_path:h"
+  # Force a rescan because compinit only checks whether the file count changed.
+  rm -f "$_comp_path" "$_comp_path.zwc"
   compinit -i -d "$_comp_path"
-  # Keep $_comp_path younger than cache time even if it isn't regenerated.
+  # Keep $_comp_path younger than the 20-hour cache time.
   touch "$_comp_path"
 fi
-unset _comp_path
+unset _comp_dir _comp_path _comp_refresh
 
 #
 # Styles
