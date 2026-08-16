@@ -154,6 +154,11 @@ zstyle ':prezto:module:git:alias' skip 'yes'
 # Auto set to 'off' on dumb terminals.
 zstyle ':prezto:module:prompt' theme 'psomasundar'
 
+# Shorten Kubernetes context names while keeping breakglass access conspicuous.
+zstyle ':prezto:module:prompt:psomasundar' kubernetes-context-formats \
+  'gke_*_*_*' '%s' \
+  'connectgateway_*_*' 'bg:%s'
+
 # Set the working directory prompt display length.
 # By default, it is set to 'short'. Set it to 'long' (without '~' expansion)
 # for longer or 'full' (with '~' expansion) for even longer prompt display.

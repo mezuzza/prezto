@@ -36,11 +36,12 @@ function prompt_psomasundar_jj_info {
 
 function prompt_psomasundar_cloud_info {
   local gcloud_config=${CLOUDSDK_CONFIG:-$HOME/.config/gcloud}/active_config
-  local active_config context
+  local active_config context format pattern suffix
   local kubeconfig=${KUBECONFIG:-$HOME/.kube/config}
   local config mtime
   local signature=$kubeconfig
-  local -a kubeconfigs
+  local -a context_formats kubeconfigs
+  local -i i
 
   _prompt_psomasundar_gcloud=
   if [[ -r $gcloud_config ]]; then
@@ -62,9 +63,16 @@ function prompt_psomasundar_cloud_info {
   if [[ $signature != $_prompt_psomasundar_kube_signature ]]; then
     _prompt_psomasundar_kube_signature=$signature
     context=$(kubectl config current-context 2>/dev/null)
-    if [[ $context == gke_*_*_* ]]; then
-      context=${context##*_}
-    fi
+    zstyle -a ':prezto:module:prompt:psomasundar' kubernetes-context-formats context_formats
+    for (( i = 1; i < $#context_formats; i += 2 )); do
+      pattern=${context_formats[i]}
+      format=${context_formats[i + 1]}
+      if [[ $context == ${~pattern} ]]; then
+        suffix=${context##*_}
+        context=${format//\%s/$suffix}
+        break
+      fi
+    done
     context=${context//\%/%%}
     _prompt_psomasundar_kubernetes=${context:+"%B%F{cyan}☸ $context%f%b"}
   fi
